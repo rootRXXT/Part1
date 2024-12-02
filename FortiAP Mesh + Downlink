@@ -1,0 +1,62 @@
+1. Login to the FortiAP CLI
+SSH into your FortiAP device:
+
+ssh admin@<FortiAP_IP>
+2. Enter Configuration Mode
+Once logged in, enter configuration mode:
+
+cfg -s
+This will show the list of variables and their current values.
+
+3. Configure the Port 2 as a LAN Port for Downlink
+Now, configure Port 2 for LAN usage (downlink), which means it will handle client traffic.
+
+You’ll first need to set FAP_ETHER_TRUNK to a suitable value (if applicable to your FortiAP model) to control the behavior of the Ethernet ports.
+
+If your FortiAP has trunking options:
+To use Port 2 in LAN mode (as a downlink port), you could do the following:
+
+cfg -a FAP_ETHER_TRUNK=0
+This will set Port 2 (or the second Ethernet port) as a dummy switch, meaning it will be used for general traffic and not as part of an aggregation or specialized behavior.
+
+Ensure the AP is in the right mode
+Verify the AP Mode setting to ensure it's configured as a Thin AP (AP_MODE=0):
+
+cfg -a AP_MODE=0
+4. Configure Mesh Settings
+You can configure the mesh parameters to allow Port 2 to participate in the mesh network.
+
+Enable Background Scanning for Mesh: You may want to enable background scanning for mesh network discovery:
+
+cfg -a MESH_AP_BGSCAN=1
+Set Mesh Backhaul Settings: If Port 2 is also meant to act as a mesh backhaul, configure mesh security and SSID:
+
+cfg -a MESH_AP_SSID="fortinet.mesh.root"
+cfg -a MESH_AP_SECURITY=1  # WPA2 Security
+cfg -a MESH_AP_PASSWD="yourMeshPassword"
+Set Mesh Communication Type: Set communication type for the mesh backhaul (Ethernet or Wi-Fi):
+
+cfg -a MESH_AP_TYPE=0  # Ethernet (for wired backhaul)
+Bridge Ethernet Port with Mesh WiFi (Optional): If you want to bridge the mesh backhaul to the Ethernet port (Port 2), use this:
+
+cfg -a MESH_ETH_BRIDGE=1
+5. Configure Port 2 Behavior for Downlink
+To enable Port 2 to handle downlink traffic, use these commands:
+
+cfg -a WANLAN_MODE="WAN-LAN"
+This command configures Port 2 to bridge LAN and WAN (in the case of FortiAP models that support this configuration). If the FortiAP uses Port 2 to connect clients, it will forward traffic between the client and the mesh network.
+
+6. Commit the Configuration
+Once you have made these changes, commit them to the flash storage:
+
+cfg -c
+7. Verify the Configuration
+You can verify that your configuration has been applied correctly by checking the mesh status and port behavior:
+
+cw_diag -c mesh
+cw_diag -c mesh-ap
+cw_diag -c mesh-veth-acinfo
+Also, verify the interface status for Port 2:
+
+cfg -s
+This will give you the updated status of Port 2 and its associated settings.
